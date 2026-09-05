@@ -1,3 +1,13 @@
+---
+title: Cliper Tools
+emoji: ✂️
+colorFrom: green
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Cliper
 
 Tool lokal untuk memotong highlight otomatis dari **YouTube** atau **video lokal**. AI (DeepSeek resmi, OpenRouter sebagai cadangan) mengusulkan clip sesuai durasi yang kamu pilih. Hasil export memakai fade lembut, caption, dan hook overlay.

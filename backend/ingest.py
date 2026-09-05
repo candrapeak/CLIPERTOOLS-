@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import os
 import re
 import shutil
+import tempfile
 from pathlib import Path
 
 from fastapi import UploadFile
@@ -57,17 +59,43 @@ def download_youtube(job_id: str, url: str) -> tuple[Path, str, float]:
         "no_warnings": True,
         "restrictfilenames": True,
     }
-    with YoutubeDL(opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        if not info:
-            raise RuntimeError("Gagal membaca info YouTube")
-        title = str(info.get("title") or "YouTube")
-        prepared = ydl.prepare_filename(info)
-        path = Path(prepared)
-        if path.suffix.lower() != ".mp4":
-            merged = path.with_suffix(".mp4")
-            if merged.exists():
-                path = merged
+    cookies_file = os.getenv("YOUTUBE_COOKIES_FILE", "").strip()
+    cookies_text = os.getenv("YOUTUBE_COOKIES", "").strip()
+    temporary_cookie_file: Path | None = None
+    if cookies_file:
+        opts["cookiefile"] = cookies_file
+    elif cookies_text:
+        handle = tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", suffix=".txt", delete=False
+        )
+        handle.write(cookies_text)
+        handle.close()
+        temporary_cookie_file = Path(handle.name)
+        opts["cookiefile"] = str(temporary_cookie_file)
+
+    try:
+        with YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            if not info:
+                raise RuntimeError("Gagal membaca info YouTube")
+            title = str(info.get("title") or "YouTube")
+            prepared = ydl.prepare_filename(info)
+            path = Path(prepared)
+            if path.suffix.lower() != ".mp4":
+                merged = path.with_suffix(".mp4")
+                if merged.exists():
+                    path = merged
+    except Exception as exc:
+        message = str(exc)
+        if "not a bot" in message.lower() or "sign in to confirm" in message.lower():
+            raise RuntimeError(
+                "YouTube memblokir server Railway. Upload video lokal atau "
+                "konfigurasi YOUTUBE_COOKIES_FILE/YOUTUBE_COOKIES di Railway."
+            ) from exc
+        raise
+    finally:
+        if temporary_cookie_file:
+            temporary_cookie_file.unlink(missing_ok=True)
 
     if not path.exists():
         matches = sorted(UPLOADS.glob(f"{job_id}_*"))

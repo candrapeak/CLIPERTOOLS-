@@ -59,6 +59,14 @@ CORS_ORIGINS=https://alamat-domain-railway-kamu.up.railway.app
 
 5. Setelah deploy, buka domain Railway dan cek `/api/health`.
 
+### Catatan YouTube di Railway
+
+YouTube kadang memblokir IP cloud Railway dengan pesan `Sign in to confirm
+you're not a bot`. Untuk trial paling stabil, upload video lokal. Jika harus
+mengambil YouTube, gunakan cookies dalam format Netscape melalui variable
+Railway `YOUTUBE_COOKIES` atau file yang dirujuk oleh `YOUTUBE_COOKIES_FILE`.
+Cookies adalah rahasia dan jangan pernah di-commit ke GitHub.
+
 ## Alur
 
 1. Tempel URL YouTube atau upload file.
